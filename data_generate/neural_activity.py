@@ -37,11 +37,10 @@ class BasicBlockDesign(NeuralActivity):
         stimulu_interval = self.blo_des_pa.stimulu_interval
         step_size = self.blo_des_pa.step_size
         cycle_length = round((stimulu_interval + stimulu_last) / step_size)
-        neural_activity = np.zeros(shape=[self.batch_size, cycles * cycle_length])
-        for batch in range(batch_size):
-            for cycle in range(cycles):
-                for index in np.arange(0, round(stimulu_last / step_size)):
-                    neural_activity[batch, cycle * cycle_length + index] = 1
+        neural_activity = np.zeros(shape=[cycles * cycle_length, self.batch_size])
+        for cycle in range(cycles):
+            for index in np.arange(0, round(stimulu_last / step_size)):
+                neural_activity[cycle * cycle_length + index, :] = 1
 
         return neural_activity
 
@@ -84,9 +83,9 @@ class BasicGaussianBump(NeuralActivity):
         sigma = self.gau_bum_pa.sigma
 
         sequence_length = round(time_length / step_size)
-        neural_activity = np.zeros(shape=[batch_size, sequence_length])
+        neural_activity = np.zeros(shape=[sequence_length, batch_size])
         for i in range(sequence_length):
-            neural_activity[:, i] = norm.pdf(i * step_size, loc=mu, scale=sigma)
+            neural_activity[i, :] = norm.pdf(i * step_size, loc=mu, scale=sigma)
 
         return neural_activity
 
