@@ -1,10 +1,10 @@
 import random
 import numpy as np
 from scipy.integrate import odeint
-from data_generate.experiment_parameters import ExperimentParameters
+from data_generate.generation_parameters import ExperimentParameters, BiophysicalParameters
 
 
-class HemodynamicModel():
+class HemodynamicModel:
 
     def __init__(self, batch_size=128, bio_pa=None, exp_pa=None):
         """
@@ -36,15 +36,13 @@ class HemodynamicModel():
         q = sta_var[3]
 
         if self.bio_pa is None:
-            bio_pa = BiophysicalParameters().as_array()
-        else:
-            bio_pa = self.bio_pa.as_array(self.bio_pa)
-        epsilon = bio_pa[0]
-        kappa = bio_pa[1]
-        gamma = bio_pa[2]
-        tau = bio_pa[3]
-        alpha = bio_pa[4]
-        phi = bio_pa[5]
+            self.bio_pa = BiophysicalParameters()
+        epsilon = self.bio_pa.epsilon
+        kappa = self.bio_pa.kappa
+        gamma = self.bio_pa.gamma
+        tau = self.bio_pa.tau
+        alpha = self.bio_pa.alpha
+        phi = self.bio_pa.phi
 
         dx = np.zeros(4)
         dx[0] = epsilon*neural - kappa*s - gamma*(f-1)
@@ -53,12 +51,9 @@ class HemodynamicModel():
         dx[3] = (f*self.oxygen_extraction(f, phi)/phi-self.outflow(v, alpha)*q/v)
         return dx
 
-    def dynamic_hemodynamic_odeint(self, initial_state=None, neural=None):
+    def dynamic_hemodynamic_odeint(self, neural, initial_state=None):
         if initial_state is None:
             initial_state = StateVariables().initial_state(batch_size=self.batch_size)
-
-        if neural is None:
-            raise TypeError('Neural is Empty!')
 
         state = initial_state
         states = list()
@@ -104,28 +99,6 @@ class HemodynamicModel():
             next_sta_var[i, :] = balloon[len(balloon)-1]
 
         return next_sta_var
-
-
-class BiophysicalParameters:
-    epsilon = 0.54
-    kappa = 0.65
-    gamma = 0.38
-    tau = 0.98
-    alpha = 0.34
-    phi = 0.32
-
-    def __init__(self, bio_pa=None):
-        if isinstance(bio_pa, BiophysicalParameters):
-            self.epsilon = bio_pa.epsilon
-            self.kappa = bio_pa.kappa
-            self.gamma = bio_pa.gamma
-            self.tau = bio_pa.tau
-            self.alpha = bio_pa.alpha
-            self.phi = bio_pa.phi
-
-    def as_array(self):
-        bio_pa = [self.epsilon, self.kappa, self.gamma, self.tau, self.alpha, self.phi]
-        return bio_pa
 
 
 class StateVariables:
