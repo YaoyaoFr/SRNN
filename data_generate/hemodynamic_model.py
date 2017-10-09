@@ -2,10 +2,10 @@ import random
 import numpy as np
 from scipy.integrate import odeint
 from data_generate.generation_parameters import ExperimentParameters, BiophysicalParameters
+from all_parameters import AllParameters
 
 
 class HemodynamicModel:
-
     def __init__(self, batch_size=128, bio_pa=None, exp_pa=None):
         """
         Initial Function
@@ -16,10 +16,12 @@ class HemodynamicModel:
         self.batch_size = batch_size
 
         if bio_pa is None:
-            self.bio_pa = BiophysicalParameters
+            bio_pa = BiophysicalParameters
+        self.bio_pa = bio_pa
 
         if exp_pa is None:
-            self.exp_pa = ExperimentParameters
+            exp_pa = ExperimentParameters
+        self.exp_pa = exp_pa
 
     def outflow(self, v, alpha):
         return v ** (1 / alpha)
@@ -45,10 +47,10 @@ class HemodynamicModel:
         phi = self.bio_pa.phi
 
         dx = np.zeros(4)
-        dx[0] = epsilon*neural - kappa*s - gamma*(f-1)
-        dx[1] = s
-        dx[2] = (f-self.outflow(v, alpha))/tau
-        dx[3] = (f*self.oxygen_extraction(f, phi)/phi-self.outflow(v, alpha)*q/v)
+        dx[0] = (epsilon*neural - kappa*(s-1) - gamma*(f-1))/s
+        dx[1] = (s-1)/f
+        dx[2] = (f-self.outflow(v, alpha)) / (tau * v)
+        dx[3] = (f*self.oxygen_extraction(f, phi)/phi-self.outflow(v, alpha)*q/v) / (tau * q)
         return dx
 
     def dynamic_hemodynamic_odeint(self, neural, initial_state=None):
@@ -102,10 +104,7 @@ class HemodynamicModel:
 
 
 class StateVariables:
-    signal = 0
-    flow = 1
-    volume = 1
-    content = 1
+    signal, flow, volume, content = AllParameters().get_hemodynamic_states()
 
     def __init__(self, sta_var=None):
         if sta_var is not None:
@@ -120,6 +119,7 @@ class StateVariables:
     def initial_state(self, batch_size=128):
         sta_var = np.zeros([batch_size, 4])
         sta_var[:, :] = [self.signal, self.flow, self.volume, self.content]
+        sta_var = np.exp(sta_var)
         return sta_var
 
 

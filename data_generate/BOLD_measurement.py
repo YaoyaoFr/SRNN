@@ -7,11 +7,13 @@ class BOLDMeasurement:
     def __init__(self, batch_size=128, bio_pa=None, exp_pa=None):
         self.batch_size = batch_size
         if bio_pa is None:
-            self.bio_pa = BiophysicalParameters()
+            bio_pa = BiophysicalParameters()
+        self.bio_pa = bio_pa
         if exp_pa is None:
-            self.exp_pa = ExperimentParameters()
+            exp_pa = ExperimentParameters()
+        self.exp_pa = exp_pa
 
-    def BOLD_generation(self, state):
+    def BOLD_generation(self, state, is_exp=True):
         """
         Generate BOLD measurement
         :param state: An ndarry with the shape of [time_sequence_length, batch_size, state_size]
@@ -19,11 +21,19 @@ class BOLDMeasurement:
         """
 
         phi = self.bio_pa.phi
-        V0 = 0.04
-        k1 = 7 * phi
-        k2 = 2
-        k3 = 2 * phi - 0.2
+        V0 = self.bio_pa.V0
+        TE = 0.04
+        r0 = 25
+        nu0 = 40.3
+        epsi = np.exp(0.02);
+
+        k1 = 4.3 * nu0 * phi * TE
+        k2 = epsi * r0 * phi * TE;
+        k3 = 1 - epsi
         shape = np.shape(state)
+        # 指数化状态变量
+        if is_exp:
+            state = np.exp(state)
         if len(shape) >= 3:
             [time_sequence_length, batch_size, state_size] = shape
             shape = [time_sequence_length, batch_size, 1]
@@ -41,6 +51,7 @@ class BOLDMeasurement:
                 BOLD = V0 * (k1 * (1 - state[:, 1]) + k2 * (1 - state[:, 1] / state[:, 0]) + k3 * (1 - state[:, 0]))
 
         BOLD = np.reshape(BOLD, newshape=shape)
+        BOLD = np.nan_to_num(BOLD)
         return BOLD
 
     def BOLD_noisy(self, BOLD, exp_pa=None):
@@ -96,11 +107,9 @@ class BOLDMeasurement:
                                                   np.reshape(downsampled_BOLD[:, i, 0], [downsampled_sequence_length, ]))
         return interpolate_BOLD
 
-    def BOLD_observation(self, states, is_noisy=True, is_downsampling=True, exp_pa=None):
+    def BOLD_observation(self, states, is_noisy=True, is_downsampling=True, is_interpolate=True, exp_pa=None):
         if states is None:
             raise TypeError('states cannot be empty!')
-
-        is_interpolate = is_downsampling
 
         BOLD = self.BOLD_generation(state=states)
         if is_noisy:

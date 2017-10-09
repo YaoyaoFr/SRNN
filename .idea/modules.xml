@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Hemodynamic_Model_Filters.iml" filepath="$PROJECT_DIR$/.idea/Hemodynamic_Model_Filters.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../KanZhunCrawling/.idea/KanZhunCrawling.iml" filepath="$PROJECT_DIR$/../KanZhunCrawling/.idea/KanZhunCrawling.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../KeywordExtraction/.idea/KeywordExtraction.iml" filepath="$PROJECT_DIR$/../KeywordExtraction/.idea/KeywordExtraction.iml" />
     </modules>
   </component>
 </project>

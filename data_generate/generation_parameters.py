@@ -1,11 +1,9 @@
 from math import e
+from all_parameters import AllParameters
 
 
 class ExperimentParameters:
-    Vg = 10
-    ode_precision = 0.001
-    TR = 1
-    observation_noise = e ** (-6)
+    Vg, ode_precision, TR, observation_noise, input_size = AllParameters().get_experiment_parameters()
 
     def __init__(self, exp_pa=None):
         if exp_pa is not None and isinstance(exp_pa, ExperimentParameters):
@@ -16,12 +14,7 @@ class ExperimentParameters:
 
 
 class BiophysicalParameters:
-    epsilon = 0.54
-    kappa = 0.65
-    gamma = 0.38
-    tau = 0.98
-    alpha = 0.34
-    phi = 0.32
+    epsilon, kappa, gamma, tau, alpha, phi, V0 = AllParameters().get_biophysical_parameters()
 
     def __init__(self, bio_pa=None):
         if isinstance(bio_pa, BiophysicalParameters):
@@ -32,6 +25,7 @@ class BiophysicalParameters:
             self.alpha = bio_pa.alpha
             self.phi = bio_pa.phi
 
+
     def as_array(self):
-        bio_pa = [self.epsilon, self.kappa, self.gamma, self.tau, self.alpha, self.phi]
+        bio_pa = [self.epsilon, self.kappa, self.gamma, self.tau, self.alpha, self.phi, self.V0]
         return bio_pa
